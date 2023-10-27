@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="Django chat room" />
+    <title>Django Chat</title>
+  </head>
+  <body>
+    <header>
+      <h1 style="color: cyan">Chatroom Frontend index-1 page</h1>
+      <h2 style="color: rgb(76, 0, 255)">Groupname: {{groupname}}</h2> <!--accesing groupname in index.html send by index view form views.py file -->
+      <h2 id="ctt"></h2>
+      <h3 id="ct"></h3>
+      {{groupname|json_script:"group-name"}} <!--for use in javascript groupname's value will be write in json_script and it will know(access) by id group-name-->
+    </header>
+    <script>
+
+      const groupName = JSON.parse(document.getElementById("group-name").textContent) //taking groupaname in javascript as variable
+      console.log(groupName)
+       
+      var ws =new WebSocket('ws://'
+      + window.location.host
+      + '/ws/wsc/'
+      + groupName  //groupName from here will go to routing and from routing it will go to consumer
+      + '/')
+      
+      ws.onopen=function (){
+        console.log('websocket connection open .....')
+        ws.send('hi,message from client...')
+      } //this method will run when connection with client will establish after running on localhost:8000/ws/sc/connect
+
+      ws.onmessage =function(event){
+        console.log("Message received from server.... ",event)
+        console.log('event data type,', typeof(event.data))
+        var data = JSON.parse(event.data) //chnaging string into object
+        // Object.values(data)
+        document.getElementById("ctt").innerText=data["message sent to client from server"]
+        document.getElementById("ct").innerText=event.data //now event.data will be a string after json.dumps so it will show like whole dict {"message sent to client from server": 9} but we want only value so we have to change this str into js object then it will show only value
+      }  //jab client ke pass data send hoga to ye method chalega  by websocket_receieve method.we can access data by event.data 
+
+      ws.onerror=function(event){
+        console.log('Websocket error occured....',event)
+      }
+
+      ws.onclose=function(event){
+        console.log("Websocket connection closed...",event)
+      }
+
+      // ws.addEventListener('open',()=>{
+      //   console.log("ws connection opened")
+      // }) same as ws.onopen event
+    </script>
+  </body>
+</html>

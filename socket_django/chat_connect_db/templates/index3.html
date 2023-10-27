@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="Django chat room" />
+    <title>Django Chat</title>
+  </head>
+  <body>
+    <header>
+      <h1 id ="chatroom" style="color:purple"></h1>
+    </header>
+
+    <textarea id="chat-log" cols="100" rows="20">
+    
+    {% for chat in chats %}
+    {{chat.content }} 
+        {{chat.cratetime}}
+    {% endfor %}
+    </textarea><br>
+    <input type="text" id="chat-message-input" cols="100" style="height: 50px; width: 426px ;"><br>
+    <input type="button" value="send" id="chat-message-submit">
+
+    {{groupname|json_script:"group-name"}}
+    
+    <script>
+      let xx = "AnonymousUser";
+      let user = prompt("Please Enter Your name",xx)
+      console.log(user)
+      document.getElementById("chatroom").innerHTML = "Welcome to Chatroom : "+user;
+
+      const groupName =JSON.parse(document.getElementById('group-name').textContent)
+      console.log(groupName,"Groupname",window.location.host)
+
+      // var ws =new WebSocket('ws://127.0.0.1:8000/ws/chl/ac/');
+
+      var ws = new WebSocket('wss://'+ window.location.host+ '/ws/db/sc/'+ groupName+ '/')
+
+      ws.onopen = function(){
+        console.log("Websocket connnnection open....")
+        // ws.send('hii from client')
+      }
+
+      ws.onmessage = function(event){ //will call when we get any message from server
+        console.log("Websocket messaged receive from server....",event.data," type of message receive from server",typeof(event.data))
+        const data = JSON.parse(event.data) //str to json
+        console.log("parsed data...",data.msg," parsed data type", typeof(data),"data-user",data.user)
+
+        document.querySelector('#chat-log').value += (data.user+":"+data.msg+'\n')
+
+      }
+
+      ws.onclose = function(event){
+        console.log("Websocket connection is closed....")
+      }
+      
+      document.getElementById('chat-message-submit').onclick = function(event){
+        const messageInputDom = document.getElementById('chat-message-input') 
+
+        const message = messageInputDom.value
+        if(message != ""){
+        ws.send(JSON.stringify({"user":user,'msg':message}))  //sending message to server
+        messageInputDom.value=''}
+
+      }
+
+    </script>
+  </body>
+</html>
